@@ -13,6 +13,14 @@ Session = sessionmaker(bind=engine)
 
 
 class TaskModel(Base):
+    """
+    Модель базы данных для задач.
+
+    Атрибуты:
+        task_id: Уникальный идентификатор задачи.
+        text: Текст задачи.
+        completed: Статус завершения задачи ('Y' для завершенной, 'N' для незавершенной).
+    """
     __tablename__ = 'tasks'
 
     task_id = Column(Integer, primary_key=True)
@@ -27,11 +35,15 @@ Base.metadata.create_all(engine)
 class DatabaseManager:
     """
     Класс для управления задачами в базе данных PostgreSQL.
+
+    Обеспечивает операции добавления, завершения, редактирования, получения и удаления задач.
     """
 
     def __init__(self):
         """
         Инициализация DatabaseManager и создание сессии.
+
+        Создает новую сессию для выполнения операций с базой данных.
         """
         self.session = Session()
 
@@ -39,8 +51,8 @@ class DatabaseManager:
         """
         Добавить задачу в базу данных.
 
-        :param text: Текст задачи
-        :return: Идентификатор задачи
+        :param text: Текст задачи.
+        :return: Идентификатор добавленной задачи.
         """
         task_model = TaskModel(text=text, completed='N')
         self.session.add(task_model)
@@ -51,7 +63,8 @@ class DatabaseManager:
         """
         Завершить задачу по идентификатору.
 
-        :param task_id: Идентификатор задачи
+        :param task_id: Идентификатор задачи, которую необходимо завершить.
+        :raises ValueError: Если задача с заданным ID не найдена.
         """
         task_model = self.session.query(TaskModel).filter(TaskModel.task_id == task_id).first()
         if task_model:
@@ -64,8 +77,9 @@ class DatabaseManager:
         """
         Редактировать задачу.
 
-        :param task_id: Идентификатор задачи
-        :param new_text: Новый текст задачи
+        :param task_id: Идентификатор задачи, которую необходимо редактировать.
+        :param new_text: Новый текст задачи.
+        :raises ValueError: Если задача с заданным ID не найдена.
         """
         task_model = self.session.query(TaskModel).filter(TaskModel.task_id == task_id).first()
         if task_model:
@@ -78,7 +92,7 @@ class DatabaseManager:
         """
         Получить список всех задач.
 
-        :return: Список объектов Task
+        :return: Список объектов Task, содержащий текст и идентификатор каждой задачи.
         """
         tasks = self.session.query(TaskModel).all()
         return [Task(task.task_id, task.text) for task in tasks]  # Создание объектов Task
@@ -87,12 +101,13 @@ class DatabaseManager:
         """
         Удалить задачу по идентификатору.
 
-        :param task_id: Идентификатор задачи
+        :param task_id: Идентификатор задачи, которую необходимо удалить.
+        :raises ValueError: Если задача с заданным ID не найдена.
         """
-
         task_model = self.session.query(TaskModel).filter(TaskModel.task_id == task_id).first()
         if task_model:
             self.session.delete(task_model)
+
             self.session.commit()
         else:
             raise ValueError(f"Ошибка: Задача с ID {task_id} не найдена.")
@@ -100,5 +115,7 @@ class DatabaseManager:
     def close(self):
         """
         Закрыть сессию.
+
+        Завершает работу с текущей сессией и освобождает ресурсы.
         """
         self.session.close()
