@@ -1,39 +1,52 @@
-from database import DatabaseManager  # Импортируем DatabaseManager из database.py
-
+from sqlalchemy.orm import sessionmaker
+from database import DatabaseManager, engine  # Импортируем DatabaseManager и engine
+from commands import (  # Импортируем стратегии команд
+    AddTaskCommand,
+    MarkDoneCommand,
+    EditTaskCommand,
+    GetTasksCommand,
+    DeleteTaskCommand,
+)
 
 class TodoApp:
     """
     Основной класс приложения Todo, отвечающий за управление задачами.
+
+    Этот класс предоставляет пользовательский интерфейс для управления задачами,
+    включая добавление, удаление, редактирование и получение задач.
     """
 
-    def __init__(self):
+    def __init__(self, db_manager):
         """
-        Инициализирует объект базы данных, создавая экземпляр DatabaseManager.
+        Инициализирует приложение с переданным объектом DatabaseManager.
+
+        :param db_manager: Экземпляр DatabaseManager для взаимодействия с базой данных.
         """
-        self.db_manager = DatabaseManager()
+        self.db_manager = db_manager  # Сохраняем экземпляр DatabaseManager
+        self.command_map = {
+            "add-task": AddTaskCommand(),   # Команда добавления задачи
+            "mark-done": MarkDoneCommand(),  # Команда отметки задачи как завершенной
+            "edit-task": EditTaskCommand(),  # Команда редактирования задачи
+            "get-tasks": GetTasksCommand(),   # Команда получения всех задач
+            "delete-task": DeleteTaskCommand(), # Команда удаления задачи
+        }
 
     def run(self):
         """
         Запускает основной цикл приложения, ожидая ввод команд от пользователя.
 
-        Ввод команд:
-        - add-task: добавить задачу
-        - mark-done: отметить задачу как завершенную
-        - edit-task: редактировать существующую задачу
-        - get-tasks: получить список всех задач
-        - delete-task: удалить задачу
-        - exit: завершает работу приложения
+        Метод предоставляет пользователю интерактивный интерфейс,
+        где он может вводить команды для управления задачами.
         """
         while True:
             try:
                 command = input("Введите команду (add-task, mark-done, edit-task, get-tasks, delete-task, exit): ")
 
-                match command:
-                    case "exit":
-                        print("Завершение программы...")
-                        break
-                    case _:
-                        self.process_command(command)
+                if command == "exit":
+                    print("Завершение программы...")
+                    break
+                else:
+                    self.process_command(command)
 
             except KeyboardInterrupt:
                 print("\nЗавершение программы...")
@@ -46,36 +59,43 @@ class TodoApp:
         :param command: Строка команды, введенная пользователем.
         """
         try:
-            match command.split(maxsplit=1):
-                case ["add-task"]:
+            parts = command.split(maxsplit=1)
+            action = parts[0]
+            args = parts[1] if len(parts) > 1 else ""
+
+            if action in self.command_map:
+                command_strategy = self.command_map[action]
+
+                if action == "add-task":
                     task_text = input("Введите текст задачи: ")
-                    task_id = self.db_manager.add_task(task_text)
+                    task_id = command_strategy.execute(self.db_manager, task_text)
                     print(f"Задача добавлена с ID {task_id}")
 
-                case ["mark-done", task_id_text]:
-                    task_id = int(task_id_text)
-                    self.db_manager.mark_done(task_id)
+                elif action == "mark-done":
+                    task_id = int(args)
+                    command_strategy.execute(self.db_manager, task_id)
                     print(f"Задача с ID {task_id} отмечена как завершенная.")
 
-                case ["edit-task", task_id_text]:
-                    task_id = int(task_id_text)
+                elif action == "edit-task":
+                    task_id = int(args)
                     new_text = input("Введите новый текст задачи: ")
-                    self.db_manager.edit_task(task_id, new_text)
+                    command_strategy.execute(self.db_manager, task_id, new_text)
                     print(f"Задача с ID {task_id} обновлена.")
 
-                case ["get-tasks"]:
-                    tasks = self.db_manager.get_tasks()
+                elif action == "get-tasks":
+                    tasks = command_strategy.execute(self.db_manager)
                     print("Все задачи:")
+
                     for task in tasks:
                         print(task)
 
-                case ["delete-task", task_id_text]:
-                    task_id = int(task_id_text)
-                    self.db_manager.delete_task(task_id)
+                elif action == "delete-task":
+                    task_id = int(args)
+                    command_strategy.execute(self.db_manager, task_id)
                     print(f"Задача с ID {task_id} удалена.")
 
-                case _:
-                    print("Неизвестная команда")
+            else:
+                print("Неизвестная команда")
 
         except (IndexError, ValueError) as e:
             print(f"Ошибка ввода: {e}")
@@ -83,11 +103,25 @@ class TodoApp:
         except Exception as e:
             print(f"Произошла ошибка: {e}")
 
-        finally:
-            # Закрывает соединение с базой данных
-            self.db_manager.close()
+    def close(self):
+        """
+        Закрывает соединение с базой данных.
+
+        Вызывается при завершении работы приложения для корректного
+        освобождения ресурсов, связанных с базой данных.
+        """
+        self.db_manager.close()  # Закрываем соединение с базой данных
 
 
 if __name__ == "__main__":
-    app = TodoApp()
-    app.run()
+    # Создаем сессию
+    session = sessionmaker(bind=engine)()
+    # Создаем экземпляр DatabaseManager
+    db_manager = DatabaseManager(session)
+    # Передаем экземпляр DatabaseManager в TodoApp
+    app = TodoApp(db_manager)
+
+    try:
+        app.run()
+    finally:
+        app.close()  # Закрываем соединение с базой данных при завершении программы

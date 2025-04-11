@@ -1,36 +1,15 @@
-from sqlalchemy import create_engine, Column, Integer, String, Enum
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from task import Task  # Импортируем ваш класс Task
+from models import TaskModel, Base  # Импортируем TaskModel из models.py
+from consolemanager import ConsoleManager  # Импортируем ваш класс Task
 
-# Настройки базы данных
+# Конфигурация базы данных
 DATABASE_URL = "postgresql://admin:admin@localhost:5432/cmd_todo_list"
-# Замените <username>, <password>, и <dbname> на ваши значения
-
 engine = create_engine(DATABASE_URL)
-Base = declarative_base()
 Session = sessionmaker(bind=engine)
-
-
-class TaskModel(Base):
-    """
-    Модель базы данных для задач.
-
-    Атрибуты:
-        task_id: Уникальный идентификатор задачи.
-        text: Текст задачи.
-        completed: Статус завершения задачи ('Y' для завершенной, 'N' для незавершенной).
-    """
-    __tablename__ = 'tasks'
-
-    task_id = Column(Integer, primary_key=True)
-    text = Column(String, nullable=False)
-    completed = Column(String, default='N')
-
 
 # Создание всех таблиц в базе данных
 Base.metadata.create_all(engine)
-
 
 class DatabaseManager:
     """
@@ -39,13 +18,13 @@ class DatabaseManager:
     Обеспечивает операции добавления, завершения, редактирования, получения и удаления задач.
     """
 
-    def __init__(self):
+    def __init__(self, session):
         """
         Инициализация DatabaseManager и создание сессии.
 
-        Создает новую сессию для выполнения операций с базой данных.
+        :param session: Сессия для выполнения операций с базой данных.
         """
-        self.session = Session()
+        self.session = session
 
     def add_task(self, text):
         """
@@ -54,7 +33,7 @@ class DatabaseManager:
         :param text: Текст задачи.
         :return: Идентификатор добавленной задачи.
         """
-        task_model = TaskModel(text=text, completed='N')
+        task_model = TaskModel(text=text, completed=False)  # Установлено значение по умолчанию
         self.session.add(task_model)
         self.session.commit()
         return task_model.task_id
@@ -68,7 +47,7 @@ class DatabaseManager:
         """
         task_model = self.session.query(TaskModel).filter(TaskModel.task_id == task_id).first()
         if task_model:
-            task_model.completed = 'Y'
+            task_model.completed = True  # Установка статуса завершенной задачи
             self.session.commit()
         else:
             raise ValueError(f"Ошибка: Задача с ID {task_id} не найдена.")
@@ -95,7 +74,7 @@ class DatabaseManager:
         :return: Список объектов Task, содержащий текст и идентификатор каждой задачи.
         """
         tasks = self.session.query(TaskModel).all()
-        return [Task(task.task_id, task.text) for task in tasks]  # Создание объектов Task
+        return [ConsoleManager(task.task_id, task.text) for task in tasks]  # Создание объектов Task
 
     def delete_task(self, task_id):
         """
@@ -107,7 +86,6 @@ class DatabaseManager:
         task_model = self.session.query(TaskModel).filter(TaskModel.task_id == task_id).first()
         if task_model:
             self.session.delete(task_model)
-
             self.session.commit()
         else:
             raise ValueError(f"Ошибка: Задача с ID {task_id} не найдена.")

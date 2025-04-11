@@ -2,7 +2,7 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from alembic import context
-from database import Base  # Импортируем Base из вашего файла database.py, где он определен
+from models import Base  # Импортируем Base из вашего файла database.py, где он определен
 
 # Записывайте конфигурацию логирования
 fileConfig(context.config.config_file_name)

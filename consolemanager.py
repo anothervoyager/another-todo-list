@@ -1,4 +1,4 @@
-class Task:
+class ConsoleManager:
     """
     Класс, представляющий задачу.
 
