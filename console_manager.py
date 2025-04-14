@@ -23,7 +23,6 @@ class ConsoleManager(IManager):
     def mark_done(self, task_id):
         """
         Завершить задачу по идентификатору.
-
         :param task_id: Идентификатор задачи
         """
         if task_id in self.tasks:
@@ -34,7 +33,6 @@ class ConsoleManager(IManager):
     def edit_task(self, task_id, new_text):
         """
         Редактировать задачу.
-
         :param task_id: Идентификатор задачи
         :param new_text: Новый текст задачи
         """
@@ -63,5 +61,3 @@ class ConsoleManager(IManager):
             del self.tasks[task_id]
         else:
             print(f"Ошибка: Задача с ID {task_id} не найдена.")
-
-

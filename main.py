@@ -54,8 +54,11 @@ class ToDoApp:
                 self.edit_task(int(parts[1]), " ".join(parts[2:]))
             elif cmd == "get-tasks":
                 tasks = self.get_tasks()
-                for task in tasks:
-                    print(task)
+                try:
+                    for task in tasks:
+                        print(task)
+                except TypeError:
+                    print("Ошибка: Не удалось перебрать задачи.")
             elif cmd == "delete-task":
                 self.delete_task(int(parts[1]))
             else:
