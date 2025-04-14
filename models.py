@@ -16,4 +16,4 @@ class TaskModel(Base):
 
     task_id = Column(Integer, primary_key=True)
     text = Column(String, nullable=False)
-    completed = Column(Boolean, default=False)  # Изменено на Boolean
+    completed = Column(Boolean, default=False)
