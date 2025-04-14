@@ -1,14 +1,16 @@
 from imanager import IManager
 from task import Task
+
+
 class ConsoleManager(IManager):
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Инициализация менеджера задач.
         """
         self.tasks = {}
         self.next_id = 1
 
-    def add_task(self, text):
+    def add_task(self, text: str) -> int:
         """
         Добавить задачу.
 
@@ -20,7 +22,7 @@ class ConsoleManager(IManager):
         self.next_id += 1
         return task.task_id
 
-    def mark_done(self, task_id):
+    def mark_done(self, task_id: int) -> None:
         """
         Завершить задачу по идентификатору.
         :param task_id: Идентификатор задачи
@@ -30,7 +32,7 @@ class ConsoleManager(IManager):
         else:
             print(f"Ошибка: Задача с ID {task_id} не найдена.")
 
-    def edit_task(self, task_id, new_text):
+    def edit_task(self, task_id: int, new_text: str) -> None:
         """
         Редактировать задачу.
         :param task_id: Идентификатор задачи
@@ -41,7 +43,7 @@ class ConsoleManager(IManager):
         else:
             print(f"Ошибка: Задача с ID {task_id} не найдена.")
 
-    def get_tasks(self):
+    def get_tasks(self) -> None:
         """
         Получить список всех задач.
         """
@@ -51,10 +53,9 @@ class ConsoleManager(IManager):
         for task in self.tasks.values():
             print(task)
 
-    def delete_task(self, task_id):
+    def delete_task(self, task_id: int) -> None:
         """
         Удалить задачу по идентификатору.
-
         :param task_id: Идентификатор задачи
         """
         if task_id in self.tasks:
