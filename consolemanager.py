@@ -5,27 +5,20 @@ class ConsoleManager:
     Атрибуты:
         task_id: Уникальный идентификатор задачи.
         text: Текст задачи.
-        done: Статус завершения задачи (по умолчанию - False).
+        done: Статус завершения задачи.
     """
 
-    def __init__(self, task_id, text):
+    def __init__(self, task_id, text, done=False):
         """
         Инициализация задачи.
 
         :param task_id: Идентификатор задачи.
         :param text: Текст задачи.
+        :param done: Статус завершенности задачи (по умолчанию - False).
         """
         self.task_id = task_id
         self.text = text
-        self.done = False
-
-    def mark_done(self):
-        """
-        Отметить задачу как завершенную.
-
-        Изменяет статус задачи на завершённый (done = True).
-        """
-        self.done = True
+        self.done = done  # Устанавливаем статус завершенности при инициализации
 
     def edit(self, new_text):
         """

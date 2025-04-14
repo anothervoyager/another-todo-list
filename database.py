@@ -71,10 +71,11 @@ class DatabaseManager:
         """
         Получить список всех задач.
 
-        :return: Список объектов Task, содержащий текст и идентификатор каждой задачи.
+        :return: Список объектов ConsoleManager, содержащий текст и идентификатор каждой задачи.
         """
         tasks = self.session.query(TaskModel).all()
-        return [ConsoleManager(task.task_id, task.text) for task in tasks]  # Создание объектов Task
+        return [ConsoleManager(task.task_id, task.text, task.completed) for task in
+                tasks]  # Теперь передаем статус completed
 
     def delete_task(self, task_id):
         """
